@@ -157,13 +157,14 @@ if __name__ == '__main__':
 
 
     classalgs = {
-      #  'Random': algs.Classifier,
+        'Random': algs.Classifier,
       #  'Naive Bayes': algs.NaiveBayes, #done
       #  'Linear Regression': algs.LinearRegressionClass, #done
-        'Logistic Regression': algs.LogisticReg,
+      #  'Logistic Regression': algs.LogisticReg,
       #  'Neural Network 1 hidden layer': algs.NeuralNet_1hiddenlayer,
       #   'Neural Network 2 hidden layers': algs.NeuralNet_2hiddenlayers,
-      #  'Kernel Logistic Regression': algs.KernelLogisticRegression,
+      #  'Linear Kernel Logistic Regression': algs.LinearKernelLogisticRegression,
+      #  'Hamming Distance Kernel Logistic Regression': algs.HammingDistanceKernelLogisticRegression,
     }
     numalgs = len(classalgs)
 
@@ -194,11 +195,17 @@ if __name__ == '__main__':
         #    { 'epochs': 100, 'nh1': 16, 'nh2': 16 },
         #    { 'epochs': 100, 'nh1': 32, 'nh2': 32 },
         ],
-        'Kernel Logistic Regression': [
-            { 'centers': 10, 'stepsize': 0.01 },
-            { 'centers': 20, 'stepsize': 0.01 },
+        'Linear Kernel Logistic Regression': [
+        #    { 'centers': 10, 'stepsize': 0.01 },
+        #    { 'centers': 20, 'stepsize': 0.01 },
             { 'centers': 40, 'stepsize': 0.01 },
-            { 'centers': 80, 'stepsize': 0.01 },
+        #    { 'centers': 80, 'stepsize': 0.01 },
+        ],
+        'Hamming Distance Kernel Logistic Regression': [
+            { 'centers': 10, 'stepsize': 0.01 },
+        #    { 'centers': 20, 'stepsize': 0.01 },
+        #    { 'centers': 40, 'stepsize': 0.01 },
+        #    { 'centers': 80, 'stepsize': 0.01 },
         ]
     }
 
@@ -221,6 +228,7 @@ if __name__ == '__main__':
         Xtrain = trainset[0]
         Ytrain = trainset[1]
         # cast the Y vector as a matrix
+        
 
         Ytrain = np.reshape(Ytrain, [len(Ytrain), 1])
 
@@ -233,8 +241,10 @@ if __name__ == '__main__':
         best_parameters_scv = {}
         for learnername, Learner in classalgs.items():
             params = parameters.get(learnername, [ None ])
-            best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, Learner, params)
-            best_parameters_scv[learnername] = stratified_cross_validate(5, Xtrain, Ytrain, Learner, params)
+            best_parameters[learnername] = params[0]
+            best_parameters_scv[learnername] = params[0]
+            #best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, Learner, params)
+            #best_parameters_scv[learnername] = stratified_cross_validate(5, Xtrain, Ytrain, Learner, params)
         print('Best parameters selected') 
         
         
@@ -255,6 +265,7 @@ if __name__ == '__main__':
             error = geterror(Ytest,predictions)
             print('SCV ', error)
             errors_scv[learnername][r] = error
+        
        
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])

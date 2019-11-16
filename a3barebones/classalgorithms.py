@@ -562,7 +562,156 @@ class KernelLogisticRegression(LogisticReg):
         self.weights = None
 
     def learn(self, X, y):
-        pass
+        # Assume X as 1Xd
+        
+        Xtrain = X
+        ytrain = y
+        
+        '''
+        # Find centers with mean and variance of Xtrain
+        
+        mean = np.zeros(Xtrain.shape[1])
+        m = 0
+        for i in range(len(Xtrain)):
+            mean = np.add(mean,Xtrain[i])
+            m += 1
+        mean = (1.0 * mean) / m
+
+        variance = np.zeros(Xtrain.shape[1])
+        for i in range(len(Xtrain)):
+            variance = np.add(variance,(Xtrain[i] - mean)**2)
+        variance = (1.0 * variance) / m
+        '''
+
+        random_indices = np.random.choice(range(len(Xtrain)), self.params['centers'], replace = False)
+        centers = Xtrain[random_indices]
+        
+        Xtrain = np.dot(Xtrain, centers.T)
+        self.weights = np.random.rand(Xtrain.shape[1])
+        
+        # Stochastic Gradient Descent
+        
+        epochs = self.params['epochs']
+        shuffle_indices = np.array(range(Xtrain.shape[0]))
+        
+        for epoch in range(epochs):
+            #print(epoch)
+            np.random.shuffle(shuffle_indices)
+            for index in shuffle_indices:
+                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index])
+                self.weights = self.weights - self.params['stepsize'] * delta_c_index
+        
+        learned_parameters = [self.weights, centers]
+        return learned_parameters
+
 
     def predict(self, Xtest, learned_parameters):
-        pass
+        predictions = np.array([])
+        numsamples = Xtest.shape[0]
+        
+        weights, centers = learned_parameters
+        Xtest = np.dot(Xtest, centers.T)
+        
+        
+        for index in range(Xtest.shape[0]):
+            if (utils.sigmoid((Xtest[index].T).dot(self.weights))) > 0.5:
+                predictions = np.concatenate((predictions, [1] ))
+            elif (utils.sigmoid((Xtest[index].T).dot(self.weights))) < 0.5:
+                predictions = np.concatenate((predictions, [0] ))
+            else:
+                predictions = np.concatenate((predictions, [np.random.randint(2)] )) # either 0 or 1 arbitrarily if both probabilities are same
+        
+        return np.reshape(predictions, [numsamples, 1])
+
+
+class HammingDistanceKernelLogisticRegression(LogisticReg):
+    def __init__(self, parameters = {}):
+        self.params = utils.update_dictionary_items({
+            'stepsize': 0.01,
+            'epochs': 100,
+            'centers': 10,
+        }, parameters)
+        self.weights = None
+
+    def learn(self, X, y):
+        # Assume X as 1Xd
+        
+        Xtrain = X
+        ytrain = y
+        
+        '''
+        # Find centers with mean and variance of Xtrain
+        
+        mean = np.zeros(Xtrain.shape[1])
+        m = 0
+        for i in range(len(Xtrain)):
+            mean = np.add(mean,Xtrain[i])
+            m += 1
+        mean = (1.0 * mean) / m
+
+        variance = np.zeros(Xtrain.shape[1])
+        for i in range(len(Xtrain)):
+            variance = np.add(variance,(Xtrain[i] - mean)**2)
+        variance = (1.0 * variance) / m
+        '''
+
+        random_indices = np.random.choice(range(len(Xtrain)), self.params['centers'], replace = False)
+        centers = Xtrain[random_indices]
+        
+        X_C = np.empty((0,self.params['centers']))
+        for x in range(Xtrain.shape[0]):
+            temp = np.array([])
+            for c in range(len(centers)):
+                temp = np.concatenate((temp, [np.sum(Xtrain[x] != centers[c])] ))
+            X_C = np.append(X_C, np.array([temp]), axis=0)
+        
+        Xtrain = X_C
+        print(Xtrain)
+
+
+        self.weights = np.random.rand(Xtrain.shape[1])
+        
+        # Stochastic Gradient Descent
+        
+        epochs = self.params['epochs']
+        shuffle_indices = np.array(range(Xtrain.shape[0]))
+        
+        for epoch in range(epochs):
+            #print(epoch)
+            np.random.shuffle(shuffle_indices)
+            for index in shuffle_indices:
+                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index])
+                self.weights = self.weights - self.params['stepsize'] * delta_c_index
+        
+        learned_parameters = [self.weights, centers]
+        return learned_parameters
+
+
+    def predict(self, Xtest, learned_parameters):
+        predictions = np.array([])
+        numsamples = Xtest.shape[0]
+        
+        weights, centers = learned_parameters
+
+
+        X_C = np.empty((0,self.params['centers']))
+        for x in range(Xtest.shape[0]):
+            temp = np.array([])
+            for c in range(len(centers)):
+                temp = np.concatenate((temp, [np.sum(Xtest[x] != centers[c])] ))
+            X_C = np.append(X_C, np.array([temp]), axis=0)
+        
+        Xtest = X_C
+        
+        
+        for index in range(Xtest.shape[0]):
+            if (utils.sigmoid((Xtest[index].T).dot(self.weights))) > 0.5:
+                predictions = np.concatenate((predictions, [1] ))
+            elif (utils.sigmoid((Xtest[index].T).dot(self.weights))) < 0.5:
+                predictions = np.concatenate((predictions, [0] ))
+            else:
+                predictions = np.concatenate((predictions, [np.random.randint(2)] )) # either 0 or 1 arbitrarily if both probabilities are same
+        
+        return np.reshape(predictions, [numsamples, 1])
+
+
