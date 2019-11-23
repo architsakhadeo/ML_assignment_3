@@ -35,7 +35,7 @@ parameters - a list of parameter dictionaries to test
 NOTE: utils.leaveOneOut will likely be useful for this problem.
 Check utilities.py for example usage.
 """
-def cross_validate(K, X, Y, Algorithm, parameters):
+def cross_validate(K, X, Y, learnername, Algorithm, parameters):
     all_errors = np.zeros((len(parameters), K))
     length = len(X)
     batchlength = 1.0*length/K
@@ -71,7 +71,7 @@ def cross_validate(K, X, Y, Algorithm, parameters):
         # Trains and tests on this data
          
         for i, params in enumerate(parameters):
-            print(k, i , params)
+            #print(k, i , params)
             learner = Algorithm(params)
             learned_parameters = learner.learn(xtrain, ytrain)
             predictions = learner.predict(xtest, learned_parameters)
@@ -85,9 +85,9 @@ def cross_validate(K, X, Y, Algorithm, parameters):
 
 
     for i, params in enumerate(parameters):
-        print('Cross validate parameters:', params)
-        print('average error:', avg_errors[i])
-        print('std error:', std_errors[i])
+        print('Cross validate parameters for ' + learnername + ' : ', params)
+        print('Average error on cross validation data for ' + learnername + ' :', avg_errors[i])
+        print('Standard error on cross validation data for ' + learnername + ' :', std_errors[i])
         print()
     best_parameters = parameters[np.argmin(avg_errors)]
 
@@ -98,7 +98,7 @@ def cross_validate(K, X, Y, Algorithm, parameters):
 
 # Stratified cross validation splits training and test data proportional to their labelled classes
 
-def stratified_cross_validate(K, X, Y, Algorithm, parameters):
+def stratified_cross_validate(K, X, Y, learnername, Algorithm, parameters):
     all_errors = np.zeros((len(parameters), K))
     batchlength = 1.0*len(X)/K
 
@@ -173,7 +173,7 @@ def stratified_cross_validate(K, X, Y, Algorithm, parameters):
         # Trains and tests on this data
         
         for i, params in enumerate(parameters):
-            print(k, i , params)
+            #print(k, i , params)
             learner = Algorithm(params)
             learned_parameters = learner.learn(xtrain, ytrain)
             predictions = learner.predict(xtest, learned_parameters)
@@ -186,11 +186,10 @@ def stratified_cross_validate(K, X, Y, Algorithm, parameters):
     std_errors = np.std(all_errors, axis=1)/math.sqrt(len(all_errors[0]))
 
     for i, params in enumerate(parameters):
-        print('Stratified cross validate parameters:', params)
-        print('average error:', avg_errors[i])
-        print('std error:', std_errors[i])
+        print('Stratified cross validate parameters for ' + learnername + ' : ', params)
+        print('Average error on stratified cross validation data for ' + learnername + ' :', avg_errors[i])
+        print('Standard error on stratified cross validation data for ' + learnername + ' :', std_errors[i])
         print()
-        
     best_parameters = parameters[np.argmin(avg_errors)]
     #print(best_parameters)
     return best_parameters
@@ -221,13 +220,13 @@ if __name__ == '__main__':
 
 
     classalgs = {
-        #'Random': algs.Classifier,
-        #'Naive Bayes': algs.NaiveBayes, #done
-        #'Linear Regression': algs.LinearRegressionClass, #done
-        #'Logistic Regression': algs.LogisticReg,
-        #'Neural Network 1 hidden layer': algs.NeuralNet_1hiddenlayer,
-        #'Neural Network 2 hidden layers': algs.NeuralNet_2hiddenlayers,
-        #'Linear Kernel Logistic Regression': algs.LinearKernelLogisticRegression,
+        'Random': algs.Classifier,
+        'Naive Bayes': algs.NaiveBayes,
+        'Linear Regression': algs.LinearRegressionClass,
+        'Logistic Regression': algs.LogisticReg,
+        'Neural Network 1 hidden layer': algs.NeuralNet_1hiddenlayer,
+        'Neural Network 2 hidden layers': algs.NeuralNet_2hiddenlayers,
+        'Linear Kernel Logistic Regression': algs.LinearKernelLogisticRegression,
         #'Hamming Distance Kernel Logistic Regression': algs.HammingDistanceKernelLogisticRegression,
     }
     numalgs = len(classalgs)
@@ -247,34 +246,34 @@ if __name__ == '__main__':
             { 'usecolumnones': False },
         ],
         'Logistic Regression': [
-         #   { 'stepsize': 0.001 },
-         #   { 'stepsize': 0.005 },            
-            { 'stepsize': 0.01 },
-         #   { 'stepsize': 0.05 },            
+            { 'epochs': 100, 'stepsize': 0.001 },
+            { 'epochs': 100, 'stepsize': 0.005 },            
+            { 'epochs': 100, 'stepsize': 0.01 },
+            { 'epochs': 100, 'stepsize': 0.05 },            
         ],
         'Neural Network 1 hidden layer': [
-        #    { 'epochs': 80, 'nh': 4 },
-            { 'epochs': 40, 'nh': 8 },
-        #    { 'epochs': 20, 'nh': 16 },
-        #    { 'epochs': 10, 'nh': 32 },
+            { 'epochs': 10, 'nh': 4 },
+            { 'epochs': 10, 'nh': 8 },
+            { 'epochs': 10, 'nh': 16 },
+            { 'epochs': 10, 'nh': 32 },
         ],
         'Neural Network 2 hidden layers': [
-        #    { 'epochs': 100, 'nh1': 4, 'nh2': 4 },
-            { 'epochs': 40, 'nh1': 8, 'nh2': 8 },
-        #    { 'epochs': 100, 'nh1': 16, 'nh2': 16 },
-        #    { 'epochs': 100, 'nh1': 32, 'nh2': 32 },
+            { 'epochs': 10, 'nh1': 4, 'nh2': 4 },
+            { 'epochs': 10, 'nh1': 8, 'nh2': 8 },
+            { 'epochs': 10, 'nh1': 16, 'nh2': 16 },
+            { 'epochs': 10, 'nh1': 32, 'nh2': 32 },
         ],
         'Linear Kernel Logistic Regression': [
-        #    { 'centers': 10, 'stepsize': 0.01 },
-        #    { 'centers': 20, 'stepsize': 0.01 },
-            { 'centers': 40, 'stepsize': 0.01 },
-        #    { 'centers': 80, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 10, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 20, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 40, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 80, 'stepsize': 0.01 },
         ],
         'Hamming Distance Kernel Logistic Regression': [
-        #    { 'centers': 10, 'stepsize': 0.01 },
-        #    { 'centers': 20, 'stepsize': 0.01 },
-            { 'centers': 40, 'stepsize': 0.01 },
-        #    { 'centers': 80, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 10, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 20, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 40, 'stepsize': 0.01 },
+            { 'epochs': 20, 'centers': 80, 'stepsize': 0.01 },
         ]
     }
 
@@ -290,7 +289,9 @@ if __name__ == '__main__':
         errors_scv[learnername] = np.zeros(numruns)
         
     for r in range(numruns):
+        print('\n----------')
         print('Run: ', r)
+        print('----------\n')
         if dataset == "susy":
             trainset, testset = dtl.load_susy(trainsize, testsize)
         elif dataset == "census":
@@ -298,27 +299,73 @@ if __name__ == '__main__':
         else:
             raise ValueError("dataset %s unknown" % dataset)
 
-        Xtrain = trainset[0]
-        Ytrain = trainset[1]
-        
-        # cast the Y vector as a matrix
+        # Data preprocessing
+
+        Xtrain = np.array(trainset[0])
+        Ytrain = np.array(trainset[1])
+        Xtest = np.array(testset[0])
+        Ytest = np.array(testset[1])
+       
 
         Ytrain = np.reshape(Ytrain, [len(Ytrain), 1])
-
-        Xtest = testset[0]
-        Ytest = testset[1]
-        # cast the Y vector as a matrix
         Ytest = np.reshape(Ytest, [len(Ytest), 1])
+        a = Ytrain
+        b = Ytest
+
+                
+        # cast the Y vector as a matrix
+        
+        X_temp = np.empty((0,len(Xtrain[0])))
+        Y_temp = np.empty((0,len(Xtrain[0])))
+                
+        for i in range(len(Xtrain)):
+            temp = np.array([])
+            for j in range(len(Xtrain[i])):
+                temp = np.concatenate((temp,[Xtrain[i][j]]))
+            X_temp = np.append(X_temp,np.array([temp]), axis=0)
+        
+        for i in range(len(Ytrain)):
+            Y_temp = np.append(Y_temp,np.array([Ytrain[i]]))
+        
+        
+        Xtrain = X_temp
+        Ytrain = Y_temp
+
+
+
+        X_temp = np.empty((0,len(Xtest[0])))
+        Y_temp = np.empty((0,len(Xtest[0])))
+
+        for i in range(len(Xtest)):
+            temp = np.array([])
+            for j in range(len(Xtest[i])):
+                temp = np.concatenate((temp,[Xtest[i][j]]))
+            X_temp = np.append(X_temp,np.array([temp]), axis=0)
+        
+        for i in range(len(Ytest)):
+            Y_temp = np.append(Y_temp,np.array([Ytest[i]]))
+        
+        
+        Xtest = X_temp
+        Ytest = Y_temp
+
+        # cast the Y vector as a matrix       
+        
+        Ytrain = np.reshape(Ytrain, [len(Ytrain), 1])        
+        Ytest = np.reshape(Ytest, [len(Ytest), 1])
+
 
         best_parameters = {}
         best_parameters_scv = {}
         for learnername, Learner in classalgs.items():
-            print('Cross validation of ' + learnername)
+            #print('Cross validation of ' + learnername)
             params = parameters.get(learnername, [ None ])
             
             # Change cross_validate to stratified_cross_validate
-            #best_parameters[learnername] = params[0]
-            best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, Learner, params)
+            
+            best_parameters[learnername] = cross_validate(5, Xtrain, Ytrain, learnername, Learner, params)
+            best_parameters_scv[learnername] = stratified_cross_validate(5, Xtrain, Ytrain, learnername, Learner, params)
+            print('--------------------\n')
         
         for learnername, Learner in classalgs.items():
             params = best_parameters[learnername]
@@ -326,11 +373,26 @@ if __name__ == '__main__':
             learned_parameters = learner.learn(Xtrain, Ytrain)
             predictions = learner.predict(Xtest, learned_parameters)
             error = geterror(Ytest,predictions)
-            print('Error for ' + learnername + ' ' + str(best_parameters[learnername]) + ' : ' + str(error))
+            print('Error on the actual test data for ' + learnername + ' for best cross validation parameter ' + str(best_parameters[learnername]) + ' : ' + str(error) + '\n')
             errors[learnername][r] = error
+            
+            params = best_parameters_scv[learnername]
+            learner = Learner(params)
+            learned_parameters = learner.learn(np.array(Xtrain), np.array(Ytrain))
+            predictions = learner.predict(np.array(Xtest), learned_parameters)
+            error = geterror(Ytest,predictions)
+            print('Error on the actual test data for ' + learnername + ' for best stratified cross validation parameter ' + str(best_parameters[learnername]) + ' : ' + str(error) + '\n')
+            errors_scv[learnername][r] = error
+            print('--------------------\n')            
        
     for learnername in classalgs:
         aveerror = np.mean(errors[learnername])
         stderror = np.std(errors[learnername])/math.sqrt(numruns)
-        print('Average error for ' + learnername + ' : ' + str(aveerror))
-        print('Standard error for ' + learnername + ' : ' + str(stderror))        
+        print('Average error on the actual test data for ' + learnername + ' after cross validation : ' + str(aveerror))
+        print('Standard error for ' + learnername + ' after cross validation : ' + str(stderror))  
+        print()
+        aveerror_scv = np.mean(errors_scv[learnername])
+        stderror_scv = np.std(errors_scv[learnername])/math.sqrt(numruns)
+        print('Average error on the actual test data for ' + learnername + ' after stratified cross validation : ' + str(aveerror_scv))
+        print('Standard error on the actual test data for ' + learnername + ' after stratified cross validation : ' + str(stderror_scv))
+        print('\n--------------------\n')              

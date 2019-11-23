@@ -166,7 +166,10 @@ class NaiveBayes(Classifier):
             #p_xij_given_yi_0 =((2*math.pi*variance_0)**(-0.5)) * math.e ** ((-(Xtest[i] - mean_0)**2) / (2 * variance_0))  
             #p_xij_given_yi_1 = ((2*math.pi*variance_1)**(-0.5)) * math.e ** ((-(Xtest[i] - mean_1)**2) / (2 * variance_1))
             
+            
+            
             # Uses utils gaussian distribution
+            # Calculates probabilities of every feature given class from a gaussian distribution over the features with given mean and variance
             
             p_xij_given_yi_0 = np.zeros(Xtest.shape[1])
             p_xij_given_yi_1 = np.zeros(Xtest.shape[1])
@@ -175,11 +178,13 @@ class NaiveBayes(Classifier):
                 p_xij_given_yi_0[j] = utils.gaussian_pdf(Xtest[i][j],mean_0[j],variance_0[j]**0.5)
                 p_xij_given_yi_1[j] = utils.gaussian_pdf(Xtest[i][j],mean_1[j],variance_1[j]**0.5)
             
-            # Calculates probability of class given that data sample by multiplying feature probabilities given class by class prior probabilities            
+            # Calculates probability of class given that data sample by multiplying feature probabilities given class by class prior probabilities     
+                   
             p_yi_given_xi_0 = np.prod(p_xij_given_yi_0) * p_y_0  # approximation of Bayes' rule since denominator p(xi) is constant for both classes
             p_yi_given_xi_1 = np.prod(p_xij_given_yi_1) * p_y_1  # approximation of Bayes' rule since denominator p(xi) is constant for both classes
             
             # Compares probabilities of classes given data sample
+            
             if p_yi_given_xi_0 > p_yi_given_xi_1:
                 predictions = np.concatenate((predictions, [0] ))
             elif p_yi_given_xi_0 < p_yi_given_xi_1:
@@ -201,7 +206,7 @@ class LogisticReg(Classifier):
 
 
     def __init__(self, parameters = {}):
-        self.params = utils.update_dictionary_items({'stepsize': 0.01, 'epochs': 100}, parameters)
+        self.params = utils.update_dictionary_items({'stepsize': 0.01, 'epochs': 100, 'regwgt': 0.5}, parameters)
         self.weights = None
 
 
@@ -221,7 +226,7 @@ class LogisticReg(Classifier):
             #print(epoch)
             np.random.shuffle(shuffle_indices)
             for index in shuffle_indices:
-                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index])
+                delta_c_index = (Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index]) )# + 2*self.params['regwgt']/(Xtrain.shape[0])*np.linalg.norm(self.weights) # for regularization
                 self.weights = self.weights - self.params['stepsize'] * delta_c_index
         
         # Returns weights as learned_parameters
@@ -598,6 +603,7 @@ class LinearKernelLogisticRegression(LogisticReg):
             'stepsize': 0.01,
             'epochs': 100,
             'centers': 10,
+            'regwgt': 0.5
         }, parameters)
         self.weights = None
 
@@ -626,7 +632,7 @@ class LinearKernelLogisticRegression(LogisticReg):
             #print(epoch)
             np.random.shuffle(shuffle_indices)
             for index in shuffle_indices:
-                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index])
+                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index]) #+ 2*self.params['regwgt']/(Xtrain.shape[0])*np.linalg.norm(self.weights) # for regularization
                 self.weights = self.weights - self.params['stepsize'] * delta_c_index
         
         learned_parameters = [self.weights, centers]
@@ -670,6 +676,7 @@ class HammingDistanceKernelLogisticRegression(LogisticReg):
             'stepsize': 0.01,
             'epochs': 100,
             'centers': 10,
+            'regwgt': 0.5
         }, parameters)
         self.weights = None
 
@@ -678,7 +685,6 @@ class HammingDistanceKernelLogisticRegression(LogisticReg):
         
         Xtrain = X
         ytrain = y
-        
         # Selects centers randomly from the Xtrain data
         
         random_indices = np.random.choice(range(len(Xtrain)), self.params['centers'], replace = False)
@@ -691,12 +697,17 @@ class HammingDistanceKernelLogisticRegression(LogisticReg):
         X_C = np.empty((0,self.params['centers']))
         for x in range(Xtrain.shape[0]):
             temp = np.array([])
+            #print(Xtrain[x])
             for c in range(len(centers)):
                 temp = np.concatenate((temp, [np.sum(Xtrain[x] != centers[c])] ))
             X_C = np.append(X_C, np.array([temp]), axis=0)
         
         Xtrain = X_C
 
+
+        #for i in range(Xtrain.shape[0]):
+        #    print(Xtrain[i])
+            
         self.weights = np.random.rand(Xtrain.shape[1])
         
         # Hamming Distance Kernel Logistic Regression with Stochastic Gradient Descent
@@ -708,8 +719,9 @@ class HammingDistanceKernelLogisticRegression(LogisticReg):
             #print(epoch)
             np.random.shuffle(shuffle_indices)
             for index in shuffle_indices:
-                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index])
+                delta_c_index = Xtrain[index] * ((utils.sigmoid((Xtrain[index].T).dot(self.weights))) - ytrain[index]) #+ 2*self.params['regwgt']/(Xtrain.shape[0])*np.linalg.norm(self.weights) # for regularization
                 self.weights = self.weights - self.params['stepsize'] * delta_c_index
+        
         
         learned_parameters = [self.weights, centers]
         return learned_parameters
@@ -731,6 +743,9 @@ class HammingDistanceKernelLogisticRegression(LogisticReg):
             X_C = np.append(X_C, np.array([temp]), axis=0)
         
         Xtest = X_C
+
+        #for i in range(Xtest.shape[0]):
+        #    print(Xtest[i])        
         
         # Thresholding sigmoid output into classes
         

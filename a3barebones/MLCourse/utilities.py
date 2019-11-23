@@ -17,7 +17,7 @@ def sigmoid(x):
         x[x > 36] = 36
     elif x > 36:
         x = 36
-
+        
     return 1.0 / (1.0 + np.exp(np.negative(x)))
 
 def dsigmoid(x):
